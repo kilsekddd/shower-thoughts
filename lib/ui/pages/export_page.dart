@@ -46,6 +46,19 @@ class _ExportPageState extends ConsumerState<ExportPage> {
             ),
             const SizedBox(height: 16),
             _Status(state: state, controller: controller),
+            const SizedBox(height: 32),
+            const Divider(),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: () => showLicensePage(
+                context: context,
+                applicationName: 'Shower Thoughts',
+                applicationLegalese:
+                    'Voice notes transcribed on-device. No cloud, no account.',
+              ),
+              icon: const Icon(Icons.info_outline, size: 18),
+              label: const Text('Open source licenses'),
+            ),
           ],
         ),
       ),
