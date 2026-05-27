@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../app/router.dart';
 import '../../data/database.dart';
+import '../layout/responsive.dart';
 import '../widgets/note_tile.dart';
 import '../widgets/search_field.dart';
 
@@ -14,7 +15,8 @@ class NotesListPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<Note>> notes = ref.watch(notesStreamProvider);
 
-    return Column(
+    return ResponsiveColumn(
+      child: Column(
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -47,6 +49,7 @@ class NotesListPage extends ConsumerWidget {
           ),
         ),
       ],
+    ),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
 import '../../data/database.dart';
+import '../layout/responsive.dart';
 
 class NoteDetailPage extends ConsumerWidget {
   const NoteDetailPage({required this.noteId, super.key});
@@ -46,7 +47,8 @@ class _NoteBody extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
-      child: Column(
+      child: ResponsiveColumn(
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
@@ -66,6 +68,7 @@ class _NoteBody extends StatelessWidget {
             style: theme.textTheme.bodyLarge,
           ),
         ],
+      ),
       ),
     );
   }
