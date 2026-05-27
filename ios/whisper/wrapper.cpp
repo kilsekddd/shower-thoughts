@@ -4,7 +4,7 @@
 // This is the production version of the spike at /.spikes/wrapper.cpp.
 // It is compiled into the Runner app via the ShowerThoughtsWhisper podspec
 // and linked against the whisper.xcframework next to it.
-#include "whisper.h"
+#include <whisper/whisper.h>
 #include <cstdio>
 #include <cstring>
 #include <cstdint>

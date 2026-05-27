@@ -29,6 +29,18 @@ dependencies:
   # FFI to whisper.cpp
   ffi: ^2.1.3
 
+dependency_overrides:
+  # record 5.2.1 pulls record_platform_interface 1.6.0, but its sibling
+  # record_linux 0.7.2 still implements the older `hasPermission(recorderId)`
+  # signature and fails to compile against 1.6.0. We ship iOS-only so the
+  # Linux impl is irrelevant at runtime, but the Dart kernel snapshot still
+  # compiles it. Pin the interface back one minor to keep the federation
+  # consistent.
+  # 1.2.0 still has a default throw-impl for startStream so record_linux
+  # 0.7.2 (which `record` 5.2.x pins by version range) compiles. 1.3.0+ make
+  # startStream abstract and break Dart's kernel snapshot for iOS builds.
+  record_platform_interface: 1.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

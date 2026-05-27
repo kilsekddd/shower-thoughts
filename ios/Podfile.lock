@@ -1,0 +1,27 @@
+PODS:
+  - Flutter (1.0.0)
+  - record_darwin (1.0.0):
+    - Flutter
+  - ShowerThoughtsWhisper (0.1.0)
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - record_darwin (from `.symlinks/plugins/record_darwin/ios`)
+  - ShowerThoughtsWhisper (from `./whisper`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  record_darwin:
+    :path: ".symlinks/plugins/record_darwin/ios"
+  ShowerThoughtsWhisper:
+    :path: "./whisper"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  record_darwin: fb1f375f1d9603714f55b8708a903bbb91ffdb0a
+  ShowerThoughtsWhisper: e40de959cd8abf70d142097109fa201ac0869b0e
+
+PODFILE CHECKSUM: f520ca0aca5c750a19189f53595a33440e0233f3
+
+COCOAPODS: 1.16.2

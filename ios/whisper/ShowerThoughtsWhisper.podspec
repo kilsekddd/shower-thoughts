@@ -43,5 +43,10 @@ Pod::Spec.new do |s|
     # Make sure the wrapper symbol is not stripped — Dart FFI looks it up by name.
     'GCC_SYMBOLS_PRIVATE_EXTERN' => 'NO',
     'STRIP_INSTALLED_PRODUCT' => 'NO',
+    # Under `use_frameworks!` the pod itself becomes a dynamic framework, and
+    # `vendored_frameworks` only auto-propagates `-framework whisper` to
+    # consumers — not to the pod's own link line. Add it explicitly so the
+    # wrapper resolves whisper_* symbols at the pod's link step.
+    'OTHER_LDFLAGS' => '$(inherited) -framework whisper',
   }
 end
