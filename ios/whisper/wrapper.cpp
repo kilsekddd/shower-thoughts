@@ -7,6 +7,7 @@
 // FLLR padding chunks before `fmt ` to 4096-byte-align the audio data, so a
 // hardcoded 44-byte header read would see zeros where channels/sr/bits live.
 #include <whisper/whisper.h>
+#include <TargetConditionals.h>
 #include <cstdio>
 #include <cstring>
 #include <cstdint>
@@ -127,7 +128,15 @@ int spike_transcribe_wav(const char* model_path, const char* wav_path, char* out
     for (size_t i = 0; i < n_samples; i++) pcm32[i] = pcm16[i] / 32768.0f;
 
     whisper_context_params cparams = whisper_context_default_params();
+    // The iOS Simulator's MTLSimDevice can't allocate the model's tensor
+    // buffer via XPC shared memory (_xpc_api_misuse / _xpc_shmem_create), so
+    // GPU init crashes. Real device Metal works fine. Fall back to CPU under
+    // the simulator only.
+#if TARGET_OS_SIMULATOR
+    cparams.use_gpu = false;
+#else
     cparams.use_gpu = true;
+#endif
     whisper_context* ctx = whisper_init_from_file_with_params(model_path, cparams);
     if (!ctx) return -5;
 

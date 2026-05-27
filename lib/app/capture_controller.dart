@@ -82,21 +82,46 @@ class CaptureController extends StateNotifier<CaptureState> {
   final String _modelId;
   final DateTime Function() _now;
 
+  /// Set by `stopRecording` if it fires before `startRecording` has resolved
+  /// — typically when iOS pops the mic permission modal during the gesture
+  /// and Flutter fires `onTapCancel` before the user has actually released.
+  /// `startRecording` checks this after its await and bails out instead of
+  /// stranding the user in a `CaptureRecording` state they can't exit.
+  bool _abortInFlightStart = false;
+
   Future<void> startRecording() async {
     if (state is! CaptureIdle && state is! CaptureCommitted && state is! CaptureFailed) {
       return;
     }
+    _abortInFlightStart = false;
     try {
       await _recorder.start();
-      state = CaptureRecording(startedAt: _now());
     } catch (e) {
       state = CaptureFailed(error: e);
+      return;
     }
+    if (_abortInFlightStart) {
+      // User released (or the gesture was cancelled) before start resolved.
+      try {
+        await _recorder.stop();
+      } catch (_) {
+        // Best-effort: swallow stop errors here — we never entered a state
+        // the user could observe, so there's nothing useful to report.
+      }
+      state = const CaptureIdle();
+      return;
+    }
+    state = CaptureRecording(startedAt: _now());
   }
 
   Future<void> stopRecording() async {
     final current = state;
-    if (current is! CaptureRecording) return;
+    if (current is! CaptureRecording) {
+      // A stop arrived before start resolved — flag it for startRecording's
+      // post-await check rather than dropping it on the floor.
+      _abortInFlightStart = true;
+      return;
+    }
     final String audioPath;
     try {
       audioPath = await _recorder.stop();

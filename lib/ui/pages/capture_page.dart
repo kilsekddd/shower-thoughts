@@ -53,11 +53,24 @@ class _StatusPanel extends StatelessWidget {
           style: theme.textTheme.bodyMedium,
           textAlign: TextAlign.center,
         ),
-      CaptureRecording() => Text(
-          'Recording — release to transcribe.',
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(color: theme.colorScheme.error),
-          textAlign: TextAlign.center,
+      CaptureRecording() => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(
+              'Recording — release to transcribe.',
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: theme.colorScheme.error),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            // Tap-up sometimes never fires (e.g. when iOS pops the mic
+            // permission modal mid-press and steals the gesture). The Stop
+            // button is the always-reachable escape hatch back to idle.
+            FilledButton.tonal(
+              onPressed: controller.stopRecording,
+              child: const Text('Stop'),
+            ),
+          ],
         ),
       CaptureTranscribing() => Row(
           mainAxisAlignment: MainAxisAlignment.center,
