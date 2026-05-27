@@ -1,0 +1,31 @@
+# ffigen config for the whisper.cpp C-ABI wrapper.
+#
+# We deliberately bind only against the tiny wrapper header (ios/whisper/wrapper.h)
+# rather than the full whisper.h. Reasons:
+#   1. The production FFI surface is exactly one function (spike_transcribe_wav).
+#   2. whisper.h transitively #includes ggml.h, which pulls in hundreds of types
+#      we don't want to expose to Dart.
+#   3. The wrapper lives in the same repo, so we don't depend on the xcframework
+#      headers being on the parser's include path.
+#
+# Regenerate after editing wrapper.h with:
+#   dart run ffigen --config ffigen.yaml
+#
+name: WhisperBindings
+description: |
+  Dart FFI bindings for the C-ABI wrapper around whisper.cpp.
+  Generated from ios/whisper/wrapper.h. Do not hand-edit.
+output: 'lib/transcription/whisper_bindings.dart'
+headers:
+  entry-points:
+    - 'ios/whisper/wrapper.h'
+  include-directives:
+    - 'ios/whisper/wrapper.h'
+preamble: |
+  // GENERATED FILE — DO NOT EDIT.
+  // Regenerate with: dart run ffigen --config ffigen.yaml
+  //
+  // ignore_for_file: type=lint, unused_field, unused_element, camel_case_types
+functions:
+  include:
+    - 'spike_transcribe_wav'

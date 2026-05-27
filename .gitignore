@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Bundled whisper model is ~77 MB — too big for vanilla git.
+# See ios/whisper/README.md for the fetch step.
+/assets/models/*.bin
