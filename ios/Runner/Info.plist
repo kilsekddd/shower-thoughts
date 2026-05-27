@@ -22,6 +22,8 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Shower Thoughts records your voice locally so it can transcribe notes on-device. Audio is deleted as soon as it is transcribed and never leaves your phone.</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
