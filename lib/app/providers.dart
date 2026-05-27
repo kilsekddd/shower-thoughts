@@ -4,8 +4,10 @@ import '../audio/audio_recorder.dart';
 import '../data/database.dart';
 import '../data/notes_dao.dart';
 import '../data/notes_repository.dart';
+import '../export/json_exporter.dart';
 import '../transcription/transcription_service.dart';
 import 'capture_controller.dart';
+import 'export_controller.dart';
 import 'notes_controller.dart';
 
 /// Overridden in `main.dart` after the database is opened so widgets can read
@@ -60,4 +62,14 @@ final StreamProvider<List<Note>> notesStreamProvider =
 final FutureProviderFamily<Note?, int> noteByIdProvider =
     FutureProvider.family<Note?, int>((Ref ref, int id) {
   return ref.watch(notesRepositoryProvider).getById(id);
+});
+
+final Provider<JsonExporter> jsonExporterProvider = Provider<JsonExporter>(
+  (Ref ref) => JsonExporter(ref.watch(notesRepositoryProvider)),
+);
+
+final StateNotifierProvider<ExportController, ExportState>
+    exportControllerProvider =
+    StateNotifierProvider<ExportController, ExportState>((Ref ref) {
+  return ExportController(exporter: ref.watch(jsonExporterProvider));
 });
