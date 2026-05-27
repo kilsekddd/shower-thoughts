@@ -44,8 +44,17 @@ class NotesRepository {
   /// All notes, newest first.
   Future<List<Note>> listAllNewestFirst() => _dao.listAllNewestFirst();
 
+  /// Live-updating stream of all notes, newest first. Emits a new list any
+  /// time a note is inserted, updated, or deleted.
+  Stream<List<Note>> watchAllNewestFirst() => _dao.watchAllNewestFirst();
+
   /// Full-text search; empty queries fall back to the newest-first list.
   Future<List<Note>> searchByText(String query) => _dao.searchByText(query);
+
+  /// Live-updating FTS search stream; empty queries fall back to the
+  /// newest-first stream.
+  Stream<List<Note>> watchSearchByText(String query) =>
+      _dao.watchSearchByText(query);
 
   /// Fetch a single note by primary key, or `null` if missing.
   Future<Note?> getById(int id) => _dao.getById(id);

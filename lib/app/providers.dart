@@ -6,6 +6,7 @@ import '../data/notes_dao.dart';
 import '../data/notes_repository.dart';
 import '../transcription/transcription_service.dart';
 import 'capture_controller.dart';
+import 'notes_controller.dart';
 
 /// Overridden in `main.dart` after the database is opened so widgets can read
 /// it synchronously. Throws if read without the override, which surfaces a
@@ -43,4 +44,20 @@ final StateNotifierProvider<CaptureController, CaptureState>
     transcriptionService: ref.watch(transcriptionServiceProvider),
     repository: ref.watch(notesRepositoryProvider),
   );
+});
+
+final StateNotifierProvider<NotesSearchQuery, String> notesSearchQueryProvider =
+    StateNotifierProvider<NotesSearchQuery, String>((Ref ref) {
+  return NotesSearchQuery();
+});
+
+final StreamProvider<List<Note>> notesStreamProvider =
+    StreamProvider<List<Note>>((Ref ref) {
+  final String query = ref.watch(notesSearchQueryProvider);
+  return ref.watch(notesRepositoryProvider).watchSearchByText(query);
+});
+
+final FutureProviderFamily<Note?, int> noteByIdProvider =
+    FutureProvider.family<Note?, int>((Ref ref, int id) {
+  return ref.watch(notesRepositoryProvider).getById(id);
 });
