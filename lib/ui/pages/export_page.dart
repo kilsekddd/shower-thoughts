@@ -4,11 +4,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/export_controller.dart';
 import '../../app/providers.dart';
 
-class ExportPage extends ConsumerWidget {
+class ExportPage extends ConsumerStatefulWidget {
   const ExportPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ExportPage> createState() => _ExportPageState();
+}
+
+class _ExportPageState extends ConsumerState<ExportPage> {
+  final GlobalKey _buttonKey = GlobalKey();
+
+  Rect? _buttonRect() {
+    final BuildContext? ctx = _buttonKey.currentContext;
+    if (ctx == null) return null;
+    final RenderObject? ro = ctx.findRenderObject();
+    if (ro is! RenderBox || !ro.attached) return null;
+    final Offset topLeft = ro.localToGlobal(Offset.zero);
+    return topLeft & ro.size;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final ExportState state = ref.watch(exportControllerProvider);
     final ExportController controller =
         ref.read(exportControllerProvider.notifier);
@@ -20,8 +36,11 @@ class ExportPage extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             FilledButton.icon(
-              onPressed:
-                  state is ExportRunning ? null : controller.exportAndShare,
+              key: _buttonKey,
+              onPressed: state is ExportRunning
+                  ? null
+                  : () => controller.exportAndShare(
+                      sharePositionOrigin: _buttonRect()),
               icon: const Icon(Icons.ios_share),
               label: const Text('Export all notes as JSON'),
             ),

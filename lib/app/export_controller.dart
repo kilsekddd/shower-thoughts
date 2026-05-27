@@ -3,6 +3,7 @@
 // Same rationale as in capture_controller.dart: public named args + private
 // fields beats forcing `_exporter:` at every call site.
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -31,26 +32,35 @@ final class ExportFailed extends ExportState {
   final Object error;
 }
 
+/// Where the share sheet anchors. On iPad iOS demands a popover anchor; on
+/// iPhone iOS 26+ also rejects `Rect.zero`, so the page must hand the
+/// controller a real rect (typically the share button's bounds in screen
+/// coordinates).
+typedef ShareCallback = Future<void> Function(
+  String filePath, {
+  Rect? sharePositionOrigin,
+});
+
 class ExportController extends StateNotifier<ExportState> {
   ExportController({
     required JsonExporter exporter,
-    Future<void> Function(String filePath)? share,
+    ShareCallback? share,
   })  : _exporter = exporter,
         _share = share ?? _defaultShare,
         super(const ExportIdle());
 
   final JsonExporter _exporter;
-  final Future<void> Function(String filePath) _share;
+  final ShareCallback _share;
 
   /// Run the exporter and hand the resulting file to the iOS share sheet.
-  /// Re-runnable: each invocation produces a fresh file with a fresh
-  /// timestamp suffix.
-  Future<void> exportAndShare() async {
+  /// [sharePositionOrigin] is the rect (in screen coordinates) the share
+  /// sheet should anchor on — required by iOS on iPad and iOS 26+ iPhone.
+  Future<void> exportAndShare({Rect? sharePositionOrigin}) async {
     if (state is ExportRunning) return;
     state = const ExportRunning();
     try {
       final String path = await _exporter.exportAll();
-      await _share(path);
+      await _share(path, sharePositionOrigin: sharePositionOrigin);
       state = ExportDone(filePath: path);
     } catch (e) {
       state = ExportFailed(error: e);
@@ -64,9 +74,13 @@ class ExportController extends StateNotifier<ExportState> {
   }
 }
 
-Future<void> _defaultShare(String filePath) async {
+Future<void> _defaultShare(
+  String filePath, {
+  Rect? sharePositionOrigin,
+}) async {
   await Share.shareXFiles(
     <XFile>[XFile(filePath, mimeType: 'application/json')],
     subject: 'shower-thoughts export',
+    sharePositionOrigin: sharePositionOrigin,
   );
 }
