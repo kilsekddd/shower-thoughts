@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background: pale aqua so the pink reads warm against a cool field -->
+  <rect width="1024" height="1024" fill="#E6F1EE"/>
+
+  <!-- Water drops, clustered directly above the blob so they read as
+       a shower falling onto it. Three asymmetric sizes for rhythm. -->
+  <g fill="#7FB8C8">
+    <path d="M 380 200
+             C 364 240, 364 280, 392 288
+             C 420 280, 420 240, 404 200
+             C 396 184, 388 184, 380 200 Z"/>
+    <path d="M 480 160
+             C 462 204, 462 252, 494 260
+             C 526 252, 526 204, 508 160
+             C 498 142, 490 142, 480 160 Z"/>
+    <path d="M 580 200
+             C 564 240, 564 280, 592 288
+             C 620 280, 620 240, 604 200
+             C 596 184, 588 184, 580 200 Z"/>
+  </g>
+
+  <!-- The blob: organic, plump, centered horizontally, sized so a 100px
+       safe margin remains on every side after Apple's rounded mask. -->
+  <path d="M 260 600
+           C 260 470, 360 380, 500 380
+           C 640 380, 740 470, 740 600
+           C 740 730, 640 820, 500 820
+           C 360 820, 260 730, 260 600 Z"
+        fill="#FF9FB8"/>
+
+  <!-- Thought bubble trail leading up-right from the blob's shoulder.
+       Two small circles + a 3-circle cloud. -->
+  <g fill="#FFFFFF">
+    <circle cx="740" cy="500" r="20"/>
+    <circle cx="800" cy="440" r="28"/>
+    <circle cx="840" cy="340" r="64"/>
+    <circle cx="908" cy="320" r="44"/>
+    <circle cx="864" cy="266" r="42"/>
+  </g>
+</svg>

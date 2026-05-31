@@ -13,11 +13,15 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: <Override>[databaseProvider.overrideWithValue(db)],
+        overrides: <Override>[
+          databaseProvider.overrideWithValue(db),
+          // Skip the model-copy bootstrap so the splash doesn't gate the test.
+          bootstrapProvider.overrideWith((Ref ref) => Future<void>.value()),
+        ],
         child: const ShowerThoughtsApp(),
       ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.text('Capture'), findsOneWidget);
