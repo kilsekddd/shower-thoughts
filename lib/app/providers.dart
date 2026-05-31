@@ -18,14 +18,21 @@ final Provider<AppDatabase> databaseProvider = Provider<AppDatabase>((Ref ref) {
   throw StateError('databaseProvider must be overridden in ProviderScope');
 });
 
-/// One-shot first-launch setup. Currently just copies the bundled whisper
-/// model out of the asset bundle into the documents directory (~77 MB, so it
-/// matters on first launch; instant thereafter). Watched by the root scaffold
-/// so the UI can show a loading state instead of a blank screen during the
-/// copy — the surface App Review's automated first-launch test sees.
+/// One-shot first-launch setup. Copies the bundled whisper model out of the
+/// asset bundle into the documents directory (~77 MB on first launch, instant
+/// thereafter). Watched by the root scaffold so the UI can show a loading
+/// state instead of a blank screen during the copy — the surface App Review's
+/// automated first-launch test sees.
+///
+/// The model copy is raced against a 2 s floor so the launch experience
+/// always lets the splash (and the app icon on it) breathe for a moment,
+/// even on subsequent launches where the copy is a no-op.
 final FutureProvider<void> bootstrapProvider = FutureProvider<void>(
   (Ref ref) async {
-    await ensureModelInstalled();
+    await Future.wait<void>(<Future<void>>[
+      ensureModelInstalled(),
+      Future<void>.delayed(const Duration(seconds: 2)),
+    ]);
   },
 );
 

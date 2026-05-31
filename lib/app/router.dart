@@ -56,16 +56,29 @@ class _BootstrapSplash extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            const SizedBox(
-              width: 32,
-              height: 32,
-              child: CircularProgressIndicator(strokeWidth: 3),
+            // Round the corners visually so the splash icon matches the
+            // home-screen squircle Apple's UI applies. The asset itself is a
+            // plain square (Apple requires RGB-no-alpha for the home-screen
+            // version), so the rounding lives here.
+            ClipRRect(
+              borderRadius: BorderRadius.circular(36),
+              child: Image.asset(
+                'assets/icon.png',
+                width: 160,
+                height: 160,
+                filterQuality: FilterQuality.high,
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
+            const SizedBox(height: 16),
             Text(
-              'Setting things up…',
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              'Shower Thoughts',
+              style: theme.textTheme.titleMedium,
             ),
           ],
         ),
