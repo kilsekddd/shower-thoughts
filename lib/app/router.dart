@@ -48,40 +48,72 @@ class _RootScaffoldState extends ConsumerState<RootScaffold> {
 class _BootstrapSplash extends StatelessWidget {
   const _BootstrapSplash();
 
+  // Sizes are kept in sync with the LaunchImage PNG and storyboard layout in
+  // ios/Runner/Assets.xcassets/LaunchImage.imageset/ and
+  // ios/Runner/Base.lproj/LaunchScreen.storyboard. The launch screen shows
+  // the same 160 pt rounded-corner icon centered on a white background. By
+  // matching position, size, corner radius, and background here, the
+  // transition from native LaunchScreen to Dart splash is invisible.
+  static const double _iconSize = 160;
+  static const double _iconRadius = 36;
+  // Vertical offset from screen-center for the spinner/wordmark cluster,
+  // measured as half the icon plus a gap. Putting the spinner+text inside a
+  // Transform.translate below the centered Stack means the icon never moves
+  // when they appear.
+  static const double _belowIconOffset = _iconSize / 2 + 28;
+
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            // Round the corners visually so the splash icon matches the
-            // home-screen squircle Apple's UI applies. The asset itself is a
-            // plain square (Apple requires RGB-no-alpha for the home-screen
-            // version), so the rounding lives here.
-            ClipRRect(
-              borderRadius: BorderRadius.circular(36),
-              child: Image.asset(
-                'assets/icon.png',
-                width: 160,
-                height: 160,
-                filterQuality: FilterQuality.high,
+      backgroundColor: Colors.white,
+      body: LayoutBuilder(
+        builder: (BuildContext _, BoxConstraints c) {
+          final double centerX = c.maxWidth / 2;
+          final double centerY = c.maxHeight / 2;
+          return Stack(
+            children: <Widget>[
+              // Icon at exact screen center — matches the LaunchScreen
+              // storyboard's centerX/centerY-constrained imageView.
+              Positioned(
+                left: centerX - _iconSize / 2,
+                top: centerY - _iconSize / 2,
+                width: _iconSize,
+                height: _iconSize,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(_iconRadius),
+                  child: Image.asset(
+                    'assets/icon.png',
+                    width: _iconSize,
+                    height: _iconSize,
+                    filterQuality: FilterQuality.high,
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
-            const SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(strokeWidth: 2.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Shower Thoughts',
-              style: theme.textTheme.titleMedium,
-            ),
-          ],
-        ),
+              // Spinner + wordmark below the icon — never pushes the icon up.
+              Positioned(
+                left: 0,
+                right: 0,
+                top: centerY + _belowIconOffset,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Shower Thoughts',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
