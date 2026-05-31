@@ -20,7 +20,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   record_darwin: fb1f375f1d9603714f55b8708a903bbb91ffdb0a
-  ShowerThoughtsWhisper: e40de959cd8abf70d142097109fa201ac0869b0e
+  ShowerThoughtsWhisper: 40fc8ed544acfca05ff7fa67b77692cacf853735
 
 PODFILE CHECKSUM: f520ca0aca5c750a19189f53595a33440e0233f3
 
