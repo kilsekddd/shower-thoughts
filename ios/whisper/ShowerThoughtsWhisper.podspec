@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
     to. The actual whisper.cpp implementation comes from the prebuilt
     whisper.xcframework vendored alongside this podspec.
   DESC
-  s.homepage         = 'https://github.com/local/shower-thoughts'
+  s.homepage         = 'https://github.com/kilsekddd/shower-thoughts'
   s.license          = { :type => 'MIT' }
   s.author           = { 'shower-thoughts' => 'noreply@local' }
   s.source           = { :path => '.' }
