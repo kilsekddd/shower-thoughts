@@ -1,0 +1,7 @@
+name: spike_whisper_ffi
+description: Dart FFI smoke test for whisper.cpp — proves the binding pattern works end-to-end without Flutter installed.
+publish_to: none
+environment:
+  sdk: ^3.3.0
+dependencies:
+  ffi: ^2.1.0
