@@ -3,8 +3,10 @@
 Push-to-talk voice notes, transcribed on-device, fully offline. Flutter iOS
 app; iPad / Android / desktop are deliberately later.
 
+- **Status:** v1.0.0 submitted to Apple App Review on 2026-05-31; live on TestFlight. Manual release pending Apple decision.
 - **Privacy policy:** https://kilsekddd.github.io/shower-thoughts/
 - **Issues / contact:** https://github.com/kilsekddd/shower-thoughts/issues
+- **Bundle ID:** `io.github.kilsekddd.showerThoughts`
 
 ## What it does
 
@@ -44,7 +46,7 @@ flutter build ipa --release   # App Store build (requires signing identity)
 
 ```
 shower-thoughts/
-├── README.md, PRD.md, ARCHITECTURE.md, CLAUDE.md, FILE_TREE.md, TASKS.md, manifest.json
+├── README.md, PRD.md, ARCHITECTURE.md, CLAUDE.md, FILE_TREE.md, TASKS.md
 ├── pubspec.yaml, analysis_options.yaml
 ├── lib/                     # Dart sources (see FILE_TREE.md)
 ├── ios/
@@ -55,6 +57,7 @@ shower-thoughts/
 │   └── models/              # bundled whisper.cpp model (ggml-tiny.en.bin, ~77 MB; gitignored)
 ├── branding/                # 1024×1024 master icon + SVG sources
 ├── docs/                    # GitHub Pages: privacy policy
+├── appstore/                # App Store listing copy + 6.9" / iPad 13" screenshots
 ├── test/                    # unit + widget tests
 ├── integration_test/        # capture-flow contract test
 └── .spikes/                 # reference: working whisper.cpp + Dart FFI spike
@@ -62,7 +65,11 @@ shower-thoughts/
 
 ## Current state
 
-All milestones M1–M9 from `TASKS.md` have shipped on `main`:
+v1.0.0+1 was submitted to Apple App Review on **2026-05-31** and is live on
+TestFlight. Manual release is configured — when Apple approves, the build
+has to be released from App Store Connect to go public.
+
+All milestones M1–M9 from `TASKS.md` shipped:
 
 | Milestone | What's there |
 |---|---|
@@ -76,16 +83,16 @@ All milestones M1–M9 from `TASKS.md` have shipped on `main`:
 | **M8** responsive | iPad layout audit, `ResponsiveColumn` width cap on prose pages |
 | **M9** release prep | Integration test (E2E), version `1.0.0+1`, app icon, splash with 2 s minimum, privacy policy, OSS license screen |
 
-### What's left for App Store ship
+Post-M9 polish on `main`: App Store listing copy + 6.9" and iPad 13"
+screenshots under `appstore/`, bundle ID moved to
+`io.github.kilsekddd.showerThoughts`, Xcode 16 umbrella-header build
+fix, and signing wired for App Store distribution.
 
-Code is done. The remaining work is on the developer side, not the codebase:
+### Roadmap (v1.1+)
 
-1. Set `DEVELOPMENT_TEAM` in Xcode (Runner target → Signing & Capabilities)
-2. `flutter build ipa --release` with your signing identity
-3. Upload via Transporter / Xcode → App Store Connect
-4. Fill in App Store Connect metadata: description, keywords, screenshots, age rating, privacy nutrition labels (all "Data Not Collected"), export compliance ("exempt — no encryption")
-5. TestFlight internal beta on a real device
-6. Submit for review
+Explicitly out of v1: optional `base.en` model as in-app download, FTS5
+BM25 ranking, Android / iPad-specific layouts. See
+[`PRD.md`](PRD.md) for the full non-goals list.
 
 ## Licensing
 
