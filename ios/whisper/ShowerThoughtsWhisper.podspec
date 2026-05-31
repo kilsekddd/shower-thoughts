@@ -23,11 +23,13 @@ Pod::Spec.new do |s|
 
   s.ios.deployment_target = '16.0'
 
-  # The wrapper source + its public header. The header is exposed so anything
-  # else in the Runner app (currently nothing) could see the symbol; Dart FFI
-  # only needs the symbol to be present in the linked binary.
-  s.source_files     = 'wrapper.cpp', 'wrapper.h'
-  s.public_header_files = 'wrapper.h'
+  # Dart FFI only needs the wrapper symbol present in the linked binary; no
+  # C/ObjC consumer in this project imports wrapper.h. Keeping the header
+  # private avoids Xcode 16+ flagging the auto-generated umbrella's
+  # `#import "wrapper.h"` as a double-quoted-include-in-framework-header
+  # error.
+  s.source_files = 'wrapper.cpp', 'wrapper.h'
+  s.private_header_files = 'wrapper.h'
 
   # Prebuilt whisper.cpp framework (ios-arm64 + ios-arm64_x86_64-simulator).
   s.vendored_frameworks = 'whisper.xcframework'
