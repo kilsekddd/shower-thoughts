@@ -3,7 +3,7 @@
 Push-to-talk voice notes, transcribed on-device, fully offline. Flutter iOS
 app; iPad / Android / desktop are deliberately later.
 
-- **Status:** v1.0.0 submitted to Apple App Review on 2026-05-31; live on TestFlight. Manual release pending Apple decision.
+- **Status:** v1.0.0 live on the App Store as of 2026-06-06.
 - **Privacy policy:** https://kilsekddd.github.io/shower-thoughts/
 - **Issues / contact:** https://github.com/kilsekddd/shower-thoughts/issues
 - **Bundle ID:** `io.github.kilsekddd.showerThoughts`
@@ -65,9 +65,8 @@ shower-thoughts/
 
 ## Current state
 
-v1.0.0+1 was submitted to Apple App Review on **2026-05-31** and is live on
-TestFlight. Manual release is configured — when Apple approves, the build
-has to be released from App Store Connect to go public.
+v1.0.0+1 was submitted to Apple App Review on **2026-05-31** and went live
+on the App Store on **2026-06-06**.
 
 All milestones M1–M9 from `TASKS.md` shipped:
 
