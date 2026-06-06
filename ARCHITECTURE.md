@@ -43,8 +43,9 @@ One logical entity.
 - `id` — INTEGER PRIMARY KEY AUTOINCREMENT
 - `created_at` — INTEGER (Unix epoch milliseconds, UTC). Drives default sort and timestamp display.
 - `duration_ms` — INTEGER. Length of the original recording.
-- `transcript` — TEXT. The transcribed text. Single-paragraph; whisper line breaks collapsed to spaces.
+- `transcript` — TEXT. The transcribed text. Single-paragraph; whisper line breaks collapsed to spaces. Editable in the detail view after capture; FTS5 stays in sync via the update trigger.
 - `model_id` — TEXT. Which whisper model produced this transcript (`ggml-tiny.en` for v1). Recorded so future model upgrades don't lie about provenance.
+- `completed_at` — INTEGER NULL (Unix epoch milliseconds, UTC). NULL means the note is still active; a value means the user marked it complete at that timestamp. Drives the Active / Completed tab partition on the list page and the sort order on the Completed tab. Added in schema v2; the Drift `onUpgrade` migration `ALTER TABLE`s it onto shipped v1.0 installs.
 
 Plus one virtual table:
 
@@ -59,11 +60,11 @@ No tags, titles, folders, or categories — confirmed out of scope. No relations
 - **Files** — produces a single `.json` export file on demand, written to the app's documents directory and handed off via the iOS share sheet.
 - **No HTTP, no IPC, no URL schemes, no widgets, no Siri shortcuts in v1.** The app is intentionally a closed system.
 
-The export JSON shape is committed here so external consumers have something stable to target:
+The export JSON shape is committed here so external consumers have something stable to target. v1.1 bumped the schema to `v2` to add `completed_at`; the rest of the shape is byte-for-byte the v1 shape, so a permissive reader can treat v2 as v1-plus-one-field:
 
 ```json
 {
-  "schema": "shower-thoughts.export.v1",
+  "schema": "shower-thoughts.export.v2",
   "exported_at": "2026-05-27T18:00:00Z",
   "notes": [
     {
@@ -71,11 +72,14 @@ The export JSON shape is committed here so external consumers have something sta
       "created_at": "2026-05-20T14:33:12Z",
       "duration_ms": 8400,
       "transcript": "...",
-      "model_id": "ggml-tiny.en"
+      "model_id": "ggml-tiny.en",
+      "completed_at": null
     }
   ]
 }
 ```
+
+`completed_at` is `null` for active notes and an ISO-8601 UTC string for completed ones. The export contains every note regardless of completion state — completion is metadata on the row, not a filter on the export.
 
 ## Key decisions and tradeoffs
 

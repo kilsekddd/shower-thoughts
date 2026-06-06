@@ -28,7 +28,7 @@ Explicitly out of scope for v1:
 - AI summarization, classification, or other LLM post-processing of transcripts.
 - Multi-device usage on a single account.
 - Speaker identification or diarization.
-- User-curated structure on notes — no tags, titles, folders, or categories. Search is the only retrieval mechanism the user is expected to use.
+- User-curated structure on notes — no tags, titles, folders, or categories. Search is the only retrieval mechanism the user is expected to use. (v1.1 adds a binary "completed" lifecycle state — see the v1.1 section below. This is intentionally not a user-defined taxonomy.)
 - Long-term audio retention or playback of original recordings after transcription.
 
 ## User journeys
@@ -51,3 +51,17 @@ Explicitly out of scope for v1:
 - The JSON export round-trips: every note in the store appears in the export with timestamp, duration, and transcript text.
 - The app passes App Store review on first or second submission.
 - The UI stays small enough that adding a new feature requires an explicit justification — "no overengineering" is a measurable design constraint.
+
+## v1.1 additions
+
+Shipped on top of v1.0 once the App Store version was live. The capture flow, on-device transcription, audio-delete contract, search behavior, and non-goals all carry forward unchanged.
+
+**1. Completed lifecycle.** Every note has a `completed_at` timestamp that is `null` while active and stamped UTC when the user marks the note complete. The notes list grew a two-tab partition (Active / Completed); Active is sorted by `created_at` newest-first, Completed by `completed_at` newest-first. Completion is a single binary lifecycle state, not a free-form category — see the non-goals note above.
+
+**2. Swipe-to-reveal actions.** The list tile reveals two actions on left-swipe: complete/reopen (depending on which tab) and delete. Delete is permanent — no trash, no undo — and confirmed via dialog before destroying the row.
+
+**3. Editable transcripts.** The detail page now hosts an editable text field with Save / Cancel actions in the app bar, plus a complete/reopen toggle and a delete button. The back gesture confirms before discarding unsaved edits. Edits go straight into the FTS index via the existing update trigger, so search stays in sync.
+
+**4. Export schema v2.** Each note row gains a `"completed_at"` field (ISO-8601 UTC string or `null`); the rest of the v1 shape is byte-for-byte preserved. Schema tag bumps to `shower-thoughts.export.v2`. The export still contains every note regardless of completion state.
+
+The non-goals from v1.0 still hold: no soft-delete or trash, no cloud sync, no AI summarization, no user-defined categories, no audio retention.

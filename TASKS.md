@@ -75,6 +75,36 @@
 - [ ] Produce a release build (`flutter build ipa --release`) and validate it against App Store Connect.
 - [ ] Submit to TestFlight, then App Store review.
 
+## Milestone 10: completed lifecycle (data layer)
+
+Shipped on top of v1.0.
+
+- [x] Add nullable `completed_at INTEGER` column to the `notes` table; bump Drift `schemaVersion` to 2; add `onUpgrade` that `ALTER TABLE`s the column onto shipped v1.0 installs.
+- [x] Regenerate `lib/data/database.g.dart`.
+- [x] Extend `NotesDao` with `setCompleted`, `updateTranscript`, `watchActiveNewestFirst`, `watchCompletedNewestFirst`, `watchById`, and tab-filtered FTS variants (`watchSearchActive`, `watchSearchCompleted`).
+- [x] Extend `NotesRepository` with `markCompleted({at})`, `markActive`, `updateTranscript`, plus the new watch variants. `commitTranscript` is unchanged.
+- [x] Update `test/data/notes_repository_test.dart` to cover lifecycle transitions, edit-to-FTS propagation, hard-delete-to-FTS purge, and tab-scoped search.
+- [x] Verify the migration on a real v1.0 install on a device (notes survive, no crash).
+
+## Milestone 11: list screen tabs + swipe-reveal
+
+- [x] Add `flutter_slidable` to `pubspec.yaml`.
+- [x] Replace `notesStreamProvider` with `notesActiveStreamProvider` + `notesCompletedStreamProvider`. Flip `noteByIdProvider` to a `StreamProvider` so the detail page reacts to deletes.
+- [x] Rewrite `lib/ui/pages/notes_list_page.dart` with a `TabBar` (Active / Completed) and a search field above the tabs that filters whichever tab is active.
+- [x] Wrap each `NoteTile` in `Slidable` with an end-action pane: Complete/Reopen + Delete. Delete confirms via `CupertinoAlertDialog` before destroying the row.
+
+## Milestone 12: detail screen edit + delete
+
+- [x] Convert `lib/ui/pages/note_detail_page.dart` to `ConsumerStatefulWidget` with an always-editable multiline `TextField` seeded from the loaded transcript.
+- [x] App bar actions: Cancel + Save while dirty; complete/reopen toggle + Delete while clean. Back gesture confirms before discarding unsaved edits via `PopScope`.
+- [x] Wire Save → `updateTranscript`, complete/reopen → `markCompleted`/`markActive`, Delete → confirm + `deleteById` + pop.
+
+## Milestone 13: export schema v2
+
+- [x] Bump exporter to `shower-thoughts.export.v2`; add `completed_at` (ISO-8601 UTC string or `null`) to each note row in the JSON. Order of v1 fields preserved.
+- [x] Update `test/export/json_exporter_test.dart`: assert `v2` tag, `completed_at` is present-and-null on active notes, ISO-stringified on completed notes, and that the export contains both active and completed rows.
+- [x] Document the v2 shape in `ARCHITECTURE.md`; add a "v1.1 additions" section to `PRD.md`.
+
 ## Out of scope (not scheduled)
 
 The PRD lists these explicitly out for v1; do not schedule work for them:

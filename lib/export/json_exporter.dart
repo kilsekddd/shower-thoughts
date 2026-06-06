@@ -14,9 +14,14 @@ import '../data/notes_repository.dart';
 /// The schema tag baked into every export. Per CLAUDE.md, this value is a
 /// contract: external consumers key off it, so bump the version if the shape
 /// ever changes.
-const String exportSchemaV1 = 'shower-thoughts.export.v1';
+///
+/// v1 -> v2: each note row gains a nullable `completed_at` ISO-8601 string
+/// (`null` for active notes). All other v1 fields are preserved verbatim and
+/// remain in the same order, so a strict-mode v1 reader sees the v2 file as
+/// a v1 file with an extra unknown field.
+const String exportSchemaV2 = 'shower-thoughts.export.v2';
 
-/// Serializes every note in the database into the v1 export JSON shape and
+/// Serializes every note in the database into the v2 export JSON shape and
 /// writes it to a file in the app's documents directory. Returns the file path
 /// so the controller can hand it to the iOS share sheet.
 class JsonExporter {
@@ -62,7 +67,7 @@ class JsonExporter {
     required DateTime exportedAt,
   }) {
     return <String, Object?>{
-      'schema': exportSchemaV1,
+      'schema': exportSchemaV2,
       'exported_at': exportedAt.toUtc().toIso8601String(),
       'notes': notes
           .map((Note n) => <String, Object?>{
@@ -73,6 +78,12 @@ class JsonExporter {
                 'duration_ms': n.durationMs,
                 'transcript': n.transcript,
                 'model_id': n.modelId,
+                'completed_at': n.completedAt == null
+                    ? null
+                    : DateTime.fromMillisecondsSinceEpoch(
+                            n.completedAt!,
+                            isUtc: true,
+                          ).toIso8601String(),
               })
           .toList(growable: false),
     };
