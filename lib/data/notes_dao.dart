@@ -17,23 +17,14 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     return into(notes).insert(entry);
   }
 
-  /// All notes, newest first. Drives the default list view.
+  /// All notes, newest first. Drives the JSON export.
   Future<List<Note>> listAllNewestFirst() {
-    return _allNewestFirst().get();
-  }
-
-  /// Live-updating version of [listAllNewestFirst] — Drift re-emits the list
-  /// whenever the `notes` table changes (which the FTS triggers fan out from).
-  Stream<List<Note>> watchAllNewestFirst() {
-    return _allNewestFirst().watch();
-  }
-
-  SimpleSelectStatement<$NotesTable, Note> _allNewestFirst() {
-    return select(notes)
-      ..orderBy(<OrderClauseGenerator<$NotesTable>>[
-        ($NotesTable t) =>
-            OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
-      ]);
+    return (select(notes)
+          ..orderBy(<OrderClauseGenerator<$NotesTable>>[
+            ($NotesTable t) =>
+                OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+          ]))
+        .get();
   }
 
   /// Live stream of active notes (`completed_at IS NULL`), newest-created first.
@@ -104,14 +95,6 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     final String? matchExpression = _matchExpressionOrNull(query);
     if (matchExpression == null) return listAllNewestFirst();
     return _searchQuery(matchExpression).get();
-  }
-
-  /// Live-updating variant of [searchByText]. Empty / whitespace queries fall
-  /// back to the full newest-first stream.
-  Stream<List<Note>> watchSearchByText(String query) {
-    final String? matchExpression = _matchExpressionOrNull(query);
-    if (matchExpression == null) return watchAllNewestFirst();
-    return _searchQuery(matchExpression).watch();
   }
 
   /// Live FTS search restricted to active notes. Empty query falls back to

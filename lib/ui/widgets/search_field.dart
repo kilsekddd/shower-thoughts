@@ -57,7 +57,8 @@ class _SearchFieldState extends State<SearchField> {
             ? null
             : IconButton(icon: const Icon(Icons.clear), onPressed: _clear),
         border: const OutlineInputBorder(),
-        isDense: true,
+        // Default (non-dense) vertical padding — `isDense: true` clips
+        // ascenders / descenders at larger dynamic-type sizes.
       ),
     );
   }

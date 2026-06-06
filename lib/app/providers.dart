@@ -72,15 +72,27 @@ final StateNotifierProvider<NotesSearchQuery, String> notesSearchQueryProvider =
   return NotesSearchQuery();
 });
 
-final StreamProvider<List<Note>> notesStreamProvider =
+/// Live stream of active notes (not yet marked complete), filtered by the
+/// current search query. Drives the Active tab in the notes list.
+final StreamProvider<List<Note>> notesActiveStreamProvider =
     StreamProvider<List<Note>>((Ref ref) {
   final String query = ref.watch(notesSearchQueryProvider);
-  return ref.watch(notesRepositoryProvider).watchSearchByText(query);
+  return ref.watch(notesRepositoryProvider).watchSearchActive(query);
 });
 
-final FutureProviderFamily<Note?, int> noteByIdProvider =
-    FutureProvider.family<Note?, int>((Ref ref, int id) {
-  return ref.watch(notesRepositoryProvider).getById(id);
+/// Live stream of completed notes, ordered by recency-of-completion and
+/// filtered by the current search query. Drives the Completed tab.
+final StreamProvider<List<Note>> notesCompletedStreamProvider =
+    StreamProvider<List<Note>>((Ref ref) {
+  final String query = ref.watch(notesSearchQueryProvider);
+  return ref.watch(notesRepositoryProvider).watchSearchCompleted(query);
+});
+
+/// Live single-note fetch keyed by id. Emits `null` if the row is deleted
+/// while a detail page is open, so the page can dismiss itself.
+final StreamProviderFamily<Note?, int> noteByIdProvider =
+    StreamProvider.family<Note?, int>((Ref ref, int id) {
+  return ref.watch(notesRepositoryProvider).watchById(id);
 });
 
 final Provider<JsonExporter> jsonExporterProvider = Provider<JsonExporter>(

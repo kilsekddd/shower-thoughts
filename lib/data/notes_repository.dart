@@ -41,12 +41,8 @@ class NotesRepository {
     }
   }
 
-  /// All notes, newest first.
+  /// All notes, newest first. Used by the JSON exporter.
   Future<List<Note>> listAllNewestFirst() => _dao.listAllNewestFirst();
-
-  /// Live-updating stream of all notes, newest first. Emits a new list any
-  /// time a note is inserted, updated, or deleted.
-  Stream<List<Note>> watchAllNewestFirst() => _dao.watchAllNewestFirst();
 
   /// Live stream of active notes (not yet marked complete), newest first.
   Stream<List<Note>> watchActiveNewestFirst() => _dao.watchActiveNewestFirst();
@@ -57,11 +53,6 @@ class NotesRepository {
 
   /// Full-text search; empty queries fall back to the newest-first list.
   Future<List<Note>> searchByText(String query) => _dao.searchByText(query);
-
-  /// Live-updating FTS search stream; empty queries fall back to the
-  /// newest-first stream.
-  Stream<List<Note>> watchSearchByText(String query) =>
-      _dao.watchSearchByText(query);
 
   /// Live FTS search restricted to active notes.
   Stream<List<Note>> watchSearchActive(String query) =>
