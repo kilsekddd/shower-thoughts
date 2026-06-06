@@ -27,6 +27,13 @@ class Notes extends Table {
 
   /// Which whisper model produced this transcript (e.g. `ggml-tiny.en`).
   TextColumn get modelId => text().named('model_id')();
+
+  /// Unix epoch milliseconds, UTC, when the user marked this note complete.
+  /// NULL means the note is still active. Nullable timestamp (rather than a
+  /// bool) so the Completed tab can sort by recency-of-completion and the
+  /// export schema can preserve when each note was finished.
+  IntColumn get completedAt =>
+      integer().named('completed_at').nullable()();
 }
 
 /// Lightweight, FFI-free draft used by the app layer to construct a new note
@@ -54,10 +61,15 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            await m.addColumn(notes, notes.completedAt);
+          }
+        },
         onCreate: (Migrator m) async {
           await m.createAll();
           // FTS5 virtual table mirrors `notes.transcript`. We use

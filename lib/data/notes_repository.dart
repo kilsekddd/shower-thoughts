@@ -48,6 +48,13 @@ class NotesRepository {
   /// time a note is inserted, updated, or deleted.
   Stream<List<Note>> watchAllNewestFirst() => _dao.watchAllNewestFirst();
 
+  /// Live stream of active notes (not yet marked complete), newest first.
+  Stream<List<Note>> watchActiveNewestFirst() => _dao.watchActiveNewestFirst();
+
+  /// Live stream of completed notes, most-recently-completed first.
+  Stream<List<Note>> watchCompletedNewestFirst() =>
+      _dao.watchCompletedNewestFirst();
+
   /// Full-text search; empty queries fall back to the newest-first list.
   Future<List<Note>> searchByText(String query) => _dao.searchByText(query);
 
@@ -56,10 +63,41 @@ class NotesRepository {
   Stream<List<Note>> watchSearchByText(String query) =>
       _dao.watchSearchByText(query);
 
+  /// Live FTS search restricted to active notes.
+  Stream<List<Note>> watchSearchActive(String query) =>
+      _dao.watchSearchActive(query);
+
+  /// Live FTS search restricted to completed notes.
+  Stream<List<Note>> watchSearchCompleted(String query) =>
+      _dao.watchSearchCompleted(query);
+
   /// Fetch a single note by primary key, or `null` if missing.
   Future<Note?> getById(int id) => _dao.getById(id);
 
-  /// Delete a note by primary key; returns the number of rows removed.
+  /// Live-updating fetch of a single note. Emits `null` if the row is deleted
+  /// while a detail page is open.
+  Stream<Note?> watchById(int id) => _dao.watchById(id);
+
+  /// Mark a note complete. `at` defaults to `DateTime.now().toUtc()` so most
+  /// callers don't need to supply it; injected timestamps make tests
+  /// deterministic.
+  Future<void> markCompleted(int id, {DateTime? at}) async {
+    await _dao.setCompleted(id, at ?? DateTime.now().toUtc());
+  }
+
+  /// Reopen a previously completed note (clear `completed_at`).
+  Future<void> markActive(int id) async {
+    await _dao.setCompleted(id, null);
+  }
+
+  /// Replace a note's transcript text. The FTS index updates in lockstep via
+  /// the schema's update trigger, so search stays in sync without extra work.
+  Future<void> updateTranscript(int id, String transcript) async {
+    await _dao.updateTranscript(id, transcript);
+  }
+
+  /// Hard delete: the row is gone, the FTS entry is gone, and there is no
+  /// trash or undo. Mirrors the product decision to not soft-delete.
   Future<int> deleteById(int id) => _dao.deleteById(id);
 
   /// Best-effort delete of the audio scratch file. A missing file is fine;

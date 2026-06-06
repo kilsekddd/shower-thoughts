@@ -36,15 +36,62 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
       ]);
   }
 
+  /// Live stream of active notes (`completed_at IS NULL`), newest-created first.
+  Stream<List<Note>> watchActiveNewestFirst() {
+    return (select(notes)
+          ..where(($NotesTable t) => t.completedAt.isNull())
+          ..orderBy(<OrderClauseGenerator<$NotesTable>>[
+            ($NotesTable t) =>
+                OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+          ]))
+        .watch();
+  }
+
+  /// Live stream of completed notes, ordered by recency of completion.
+  Stream<List<Note>> watchCompletedNewestFirst() {
+    return (select(notes)
+          ..where(($NotesTable t) => t.completedAt.isNotNull())
+          ..orderBy(<OrderClauseGenerator<$NotesTable>>[
+            ($NotesTable t) => OrderingTerm(
+                expression: t.completedAt, mode: OrderingMode.desc),
+          ]))
+        .watch();
+  }
+
   /// Fetch a single note by primary key, or `null` if it does not exist.
   Future<Note?> getById(int id) {
     return (select(notes)..where(($NotesTable t) => t.id.equals(id)))
         .getSingleOrNull();
   }
 
+  /// Live-updating fetch of a single note by primary key. Emits `null` when
+  /// the row is missing (e.g. it was just deleted), so detail pages can react.
+  Stream<Note?> watchById(int id) {
+    return (select(notes)..where(($NotesTable t) => t.id.equals(id)))
+        .watchSingleOrNull();
+  }
+
   /// Delete a row by primary key; returns the number of rows removed.
   Future<int> deleteById(int id) {
     return (delete(notes)..where(($NotesTable t) => t.id.equals(id))).go();
+  }
+
+  /// Set the `completed_at` column. Pass `null` to reopen a completed note.
+  /// Returns the number of rows updated.
+  Future<int> setCompleted(int id, DateTime? at) {
+    return (update(notes)..where(($NotesTable t) => t.id.equals(id))).write(
+      NotesCompanion(
+        completedAt: Value<int?>(at?.toUtc().millisecondsSinceEpoch),
+      ),
+    );
+  }
+
+  /// Replace the transcript text for a single row. The FTS5 update trigger
+  /// keeps `notes_fts` in sync. Returns the number of rows updated.
+  Future<int> updateTranscript(int id, String transcript) {
+    return (update(notes)..where(($NotesTable t) => t.id.equals(id))).write(
+      NotesCompanion(transcript: Value<String>(transcript)),
+    );
   }
 
   /// Full-text search via the `notes_fts` virtual table.
@@ -67,12 +114,51 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
     return _searchQuery(matchExpression).watch();
   }
 
+  /// Live FTS search restricted to active notes. Empty query falls back to
+  /// [watchActiveNewestFirst].
+  Stream<List<Note>> watchSearchActive(String query) {
+    final String? matchExpression = _matchExpressionOrNull(query);
+    if (matchExpression == null) return watchActiveNewestFirst();
+    return _filteredSearchQuery(
+      matchExpression,
+      completionClause: 'notes.completed_at IS NULL',
+      orderClause: 'notes.created_at DESC',
+    ).watch();
+  }
+
+  /// Live FTS search restricted to completed notes, ordered by
+  /// completed_at DESC. Empty query falls back to [watchCompletedNewestFirst].
+  Stream<List<Note>> watchSearchCompleted(String query) {
+    final String? matchExpression = _matchExpressionOrNull(query);
+    if (matchExpression == null) return watchCompletedNewestFirst();
+    return _filteredSearchQuery(
+      matchExpression,
+      completionClause: 'notes.completed_at IS NOT NULL',
+      orderClause: 'notes.completed_at DESC',
+    ).watch();
+  }
+
   Selectable<Note> _searchQuery(String matchExpression) {
     return customSelect(
       'SELECT notes.* FROM notes '
       'JOIN notes_fts ON notes_fts.rowid = notes.id '
       'WHERE notes_fts MATCH ? '
       'ORDER BY notes.created_at DESC',
+      variables: <Variable<Object>>[Variable<String>(matchExpression)],
+      readsFrom: <ResultSetImplementation<Table, Object?>>{notes},
+    ).asyncMap((QueryRow row) => notes.mapFromRow(row));
+  }
+
+  Selectable<Note> _filteredSearchQuery(
+    String matchExpression, {
+    required String completionClause,
+    required String orderClause,
+  }) {
+    return customSelect(
+      'SELECT notes.* FROM notes '
+      'JOIN notes_fts ON notes_fts.rowid = notes.id '
+      'WHERE notes_fts MATCH ? AND $completionClause '
+      'ORDER BY $orderClause',
       variables: <Variable<Object>>[Variable<String>(matchExpression)],
       readsFrom: <ResultSetImplementation<Table, Object?>>{notes},
     ).asyncMap((QueryRow row) => notes.mapFromRow(row));
