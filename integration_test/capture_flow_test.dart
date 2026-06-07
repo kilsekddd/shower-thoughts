@@ -18,6 +18,8 @@ import 'package:integration_test/integration_test.dart';
 import 'package:shower_thoughts/app/capture_controller.dart';
 import 'package:shower_thoughts/audio/audio_paths.dart';
 import 'package:shower_thoughts/audio/audio_recorder.dart';
+import 'package:shower_thoughts/audio/cue_player.dart';
+import 'package:shower_thoughts/audio/haptic_adapter.dart';
 import 'package:shower_thoughts/data/database.dart';
 import 'package:shower_thoughts/data/notes_dao.dart';
 import 'package:shower_thoughts/data/notes_repository.dart';
@@ -49,6 +51,8 @@ void main() {
         recorder: recorder,
         transcriptionService: TranscriptionService(),
         repository: repository,
+        cuePlayer: _NoopCuePlayer(),
+        haptic: _NoopHapticAdapter(),
       );
       addTearDown(controller.dispose);
 
@@ -105,6 +109,22 @@ Future<void> _waitForTerminalState(
   }
   fail('controller did not reach a terminal state in time '
       '(last seen: ${controller.state.runtimeType})');
+}
+
+class _NoopCuePlayer implements CuePlayer {
+  @override
+  Future<void> playStart() async {}
+  @override
+  Future<void> playStop() async {}
+  @override
+  Future<void> dispose() async {}
+}
+
+class _NoopHapticAdapter implements HapticAdapter {
+  @override
+  void startCue() {}
+  @override
+  void stopCue() {}
 }
 
 /// `AudioRecorder` stand-in that drops a canonical 16 kHz mono 16-bit PCM WAV

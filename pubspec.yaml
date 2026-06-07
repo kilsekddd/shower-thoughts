@@ -35,6 +35,9 @@ dependencies:
   # Key/value store for user-tunable settings (record-mode toggle, etc.).
   shared_preferences: ^2.3.0
 
+  # Playback of the short start/stop cue tones bundled in assets/sounds/.
+  audioplayers: ^6.1.0
+
 dependency_overrides:
   # record 5.2.1 pulls record_platform_interface 1.6.0, but its sibling
   # record_linux 0.7.2 still implements the older `hasPermission(recorderId)`
@@ -74,4 +77,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/models/
+    - assets/sounds/
     - assets/icon.png

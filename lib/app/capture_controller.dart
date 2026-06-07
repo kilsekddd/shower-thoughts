@@ -11,6 +11,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../audio/audio_recorder.dart';
+import '../audio/cue_player.dart';
+import '../audio/haptic_adapter.dart';
 import '../data/database.dart';
 import '../data/notes_repository.dart';
 import '../transcription/model_assets.dart';
@@ -90,12 +92,16 @@ class CaptureController extends StateNotifier<CaptureState> {
     required AudioRecorder recorder,
     required TranscriptionService transcriptionService,
     required NotesRepository repository,
+    required CuePlayer cuePlayer,
+    required HapticAdapter haptic,
     String modelId = defaultModelId,
     DateTime Function() now = DateTime.now,
     Duration maxDuration = kDefaultMaxRecordingDuration,
   })  : _recorder = recorder,
         _transcription = transcriptionService,
         _repository = repository,
+        _cuePlayer = cuePlayer,
+        _haptic = haptic,
         _modelId = modelId,
         _now = now,
         _maxDuration = maxDuration,
@@ -104,6 +110,8 @@ class CaptureController extends StateNotifier<CaptureState> {
   final AudioRecorder _recorder;
   final TranscriptionService _transcription;
   final NotesRepository _repository;
+  final CuePlayer _cuePlayer;
+  final HapticAdapter _haptic;
   final String _modelId;
   final DateTime Function() _now;
   final Duration _maxDuration;
@@ -130,6 +138,8 @@ class CaptureController extends StateNotifier<CaptureState> {
     }
     _abortInFlightStart = false;
     _stoppedByCap = false;
+    _haptic.startCue();
+    unawaited(_cuePlayer.playStart());
     try {
       await _recorder.start();
     } catch (e) {
@@ -179,6 +189,8 @@ class CaptureController extends StateNotifier<CaptureState> {
       state = CaptureFailed(error: e);
       return;
     }
+    _haptic.stopCue();
+    unawaited(_cuePlayer.playStop());
     final int durationMs =
         _now().difference(current.startedAt).inMilliseconds.clamp(0, 1 << 31);
     final bool autoStopped = _stoppedByCap;

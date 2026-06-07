@@ -5,7 +5,25 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shower_thoughts/app/app.dart';
 import 'package:shower_thoughts/app/providers.dart';
+import 'package:shower_thoughts/audio/cue_player.dart';
+import 'package:shower_thoughts/audio/haptic_adapter.dart';
 import 'package:shower_thoughts/data/database.dart';
+
+class _NoopCuePlayer implements CuePlayer {
+  @override
+  Future<void> playStart() async {}
+  @override
+  Future<void> playStop() async {}
+  @override
+  Future<void> dispose() async {}
+}
+
+class _NoopHapticAdapter implements HapticAdapter {
+  @override
+  void startCue() {}
+  @override
+  void stopCue() {}
+}
 
 void main() {
   testWidgets('app boots to the capture tab', (WidgetTester tester) async {
@@ -19,6 +37,8 @@ void main() {
         overrides: <Override>[
           databaseProvider.overrideWithValue(db),
           sharedPreferencesProvider.overrideWithValue(prefs),
+          cuePlayerProvider.overrideWithValue(_NoopCuePlayer()),
+          hapticAdapterProvider.overrideWithValue(_NoopHapticAdapter()),
           // Skip the model-copy bootstrap so the splash doesn't gate the test.
           bootstrapProvider.overrideWith((Ref ref) => Future<void>.value()),
         ],

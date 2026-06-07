@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../audio/audio_recorder.dart';
+import '../audio/cue_player.dart';
+import '../audio/haptic_adapter.dart';
 import '../data/database.dart';
 import '../data/notes_dao.dart';
 import '../data/notes_repository.dart';
@@ -95,6 +97,17 @@ final Provider<TranscriptionService> transcriptionServiceProvider =
   return TranscriptionService();
 });
 
+final Provider<CuePlayer> cuePlayerProvider = Provider<CuePlayer>((Ref ref) {
+  final CuePlayer player = CuePlayer();
+  ref.onDispose(player.dispose);
+  return player;
+});
+
+final Provider<HapticAdapter> hapticAdapterProvider =
+    Provider<HapticAdapter>((Ref ref) {
+  return const SystemHapticAdapter();
+});
+
 final StateNotifierProvider<CaptureController, CaptureState>
     captureControllerProvider =
     StateNotifierProvider<CaptureController, CaptureState>((Ref ref) {
@@ -102,6 +115,8 @@ final StateNotifierProvider<CaptureController, CaptureState>
     recorder: ref.watch(audioRecorderProvider),
     transcriptionService: ref.watch(transcriptionServiceProvider),
     repository: ref.watch(notesRepositoryProvider),
+    cuePlayer: ref.watch(cuePlayerProvider),
+    haptic: ref.watch(hapticAdapterProvider),
   );
 });
 

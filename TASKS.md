@@ -147,6 +147,43 @@ mirror the same shape.
 - [x] `test/ui/widgets/push_to_talk_button_test.dart` confirms toggle mode
       fires `onStart` on tap 1 and `onStop` on tap 2.
 
+## Milestone 16: start/stop audible + haptic cues
+
+People near the user should know recording is happening, and the user
+should get eyes-off confirmation. Both gesture modes from M15 (hold and
+toggle) need the cues. Cues must not bleed into the recorded WAV — the
+start cue fires before `_recorder.start()` and the end cue fires after
+`_recorder.stop()`.
+
+- [x] Add `audioplayers` to `pubspec.yaml` and register
+      `assets/sounds/` under `flutter.assets`.
+- [x] `tool/generate_cues.dart` synthesises
+      `assets/sounds/start.wav` (rising 600 → 900 Hz sine sweep, ~150 ms,
+      10 ms fades, phase-continuous) and `assets/sounds/stop.wav`
+      (falling 900 → 600 Hz, same envelope). Both 22050 Hz mono 16-bit
+      PCM WAV, kept in-repo so cues can be reshaped later.
+- [x] `lib/audio/cue_player.dart` wraps two `AudioPlayer`s with
+      `playStart` / `playStop` / `dispose`, and accepts an optional
+      factory for tests.
+- [x] `lib/audio/haptic_adapter.dart` abstracts `HapticFeedback` behind
+      `HapticAdapter` so tests can stub. `SystemHapticAdapter` fires
+      medium impact on start, light impact on stop.
+- [x] `lib/app/providers.dart` adds `cuePlayerProvider` (with
+      `ref.onDispose` cleanup) and `hapticAdapterProvider`, wired into
+      the `CaptureController` provider.
+- [x] `lib/app/capture_controller.dart` takes `cuePlayer` and `haptic`
+      via the ctor. Start cue + medium haptic fire immediately before
+      `_recorder.start()`. End cue + light haptic fire immediately
+      after `_recorder.stop()` in the success path of `stopRecording`;
+      the cap-triggered auto-stop reuses that same path. No cue fires in
+      the catch-on-stop or retry paths.
+- [x] `test/app/capture_controller_test.dart` stubs both adapters with
+      counting fakes and asserts that a happy-path start → stop fires
+      each adapter exactly once.
+- [x] `test/widget_test.dart` overrides both providers with no-op fakes
+      so audioplayers' platform channel does not run under headless
+      tests.
+
 ## Out of scope (not scheduled)
 
 The PRD lists these explicitly out for v1; do not schedule work for them:

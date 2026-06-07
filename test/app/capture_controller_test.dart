@@ -4,6 +4,8 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shower_thoughts/app/capture_controller.dart';
 import 'package:shower_thoughts/audio/audio_recorder.dart';
+import 'package:shower_thoughts/audio/cue_player.dart';
+import 'package:shower_thoughts/audio/haptic_adapter.dart';
 import 'package:shower_thoughts/data/database.dart';
 import 'package:shower_thoughts/data/notes_dao.dart';
 import 'package:shower_thoughts/data/notes_repository.dart';
@@ -50,6 +52,39 @@ class _FakeTranscription implements TranscriptionService {
   }
 }
 
+class _FakeCuePlayer implements CuePlayer {
+  int startCount = 0;
+  int stopCount = 0;
+
+  @override
+  Future<void> playStart() async {
+    startCount++;
+  }
+
+  @override
+  Future<void> playStop() async {
+    stopCount++;
+  }
+
+  @override
+  Future<void> dispose() async {}
+}
+
+class _FakeHapticAdapter implements HapticAdapter {
+  int startCount = 0;
+  int stopCount = 0;
+
+  @override
+  void startCue() {
+    startCount++;
+  }
+
+  @override
+  void stopCue() {
+    stopCount++;
+  }
+}
+
 void main() {
   late Directory tmp;
   late String audioPath;
@@ -79,6 +114,8 @@ void main() {
       recorder: recorder,
       transcriptionService: transcription,
       repository: repository,
+      cuePlayer: _FakeCuePlayer(),
+      haptic: _FakeHapticAdapter(),
     );
 
     expect(controller.state, isA<CaptureIdle>());
@@ -109,6 +146,8 @@ void main() {
       recorder: recorder,
       transcriptionService: transcription,
       repository: repository,
+      cuePlayer: _FakeCuePlayer(),
+      haptic: _FakeHapticAdapter(),
     );
 
     await controller.startRecording();
@@ -137,6 +176,8 @@ void main() {
       recorder: recorder,
       transcriptionService: transcription,
       repository: repository,
+      cuePlayer: _FakeCuePlayer(),
+      haptic: _FakeHapticAdapter(),
     );
 
     await controller.startRecording();
@@ -167,6 +208,8 @@ void main() {
       recorder: recorder,
       transcriptionService: transcription,
       repository: repository,
+      cuePlayer: _FakeCuePlayer(),
+      haptic: _FakeHapticAdapter(),
       maxDuration: const Duration(milliseconds: 50),
     );
 
@@ -189,6 +232,31 @@ void main() {
     await controller.stopRecording();
     final CaptureCommitted secondCommit = controller.state as CaptureCommitted;
     expect(secondCommit.autoStoppedByCap, isFalse);
+  });
+
+  test('happy-path start/stop fires each cue and haptic exactly once',
+      () async {
+    final _FakeRecorder recorder = _FakeRecorder(audioPath);
+    final _FakeTranscription transcription =
+        _FakeTranscription(<Object>['cues fired']);
+    final _FakeCuePlayer cuePlayer = _FakeCuePlayer();
+    final _FakeHapticAdapter haptic = _FakeHapticAdapter();
+    final CaptureController controller = CaptureController(
+      recorder: recorder,
+      transcriptionService: transcription,
+      repository: repository,
+      cuePlayer: cuePlayer,
+      haptic: haptic,
+    );
+
+    await controller.startRecording();
+    await controller.stopRecording();
+    expect(controller.state, isA<CaptureCommitted>());
+
+    expect(cuePlayer.startCount, 1);
+    expect(cuePlayer.stopCount, 1);
+    expect(haptic.startCount, 1);
+    expect(haptic.stopCount, 1);
   });
 }
 
