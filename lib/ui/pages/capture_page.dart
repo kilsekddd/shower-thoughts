@@ -38,6 +38,12 @@ class CapturePage extends ConsumerWidget {
   }
 }
 
+/// Shown alongside the transcribing spinner and the "Saved." confirmation when
+/// the recording was auto-stopped by the cap. Kept short — the user just needs
+/// to know their hold was cut short so a missing-tail won't read as a bug.
+const String _capReachedMessage =
+    'Recording reached the 10-minute cap.';
+
 class _StatusPanel extends StatelessWidget {
   const _StatusPanel({required this.state, required this.controller});
 
@@ -72,19 +78,32 @@ class _StatusPanel extends StatelessWidget {
             ),
           ],
         ),
-      CaptureTranscribing() => Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+      CaptureTranscribing(:final bool autoStoppedByCap) => Column(
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 12),
+                Text('Transcribing…', style: theme.textTheme.bodyMedium),
+              ],
             ),
-            const SizedBox(width: 12),
-            Text('Transcribing…', style: theme.textTheme.bodyMedium),
+            if (autoStoppedByCap) ...<Widget>[
+              const SizedBox(height: 8),
+              Text(
+                _capReachedMessage,
+                style: theme.textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ],
           ],
         ),
-      CaptureCommitted() => Column(
+      CaptureCommitted(:final bool autoStoppedByCap) => Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Text(
@@ -92,6 +111,14 @@ class _StatusPanel extends StatelessWidget {
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: theme.colorScheme.primary),
             ),
+            if (autoStoppedByCap) ...<Widget>[
+              const SizedBox(height: 4),
+              Text(
+                _capReachedMessage,
+                style: theme.textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ],
             TextButton(
               onPressed: controller.dismiss,
               child: const Text('Record another'),

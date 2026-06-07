@@ -157,4 +157,50 @@ void main() {
     // Audio gone after successful commit.
     expect(File(audioPath).existsSync(), isFalse);
   });
+
+  test('max-duration cap auto-stops, transcribes, and surfaces the flag',
+      () async {
+    final _FakeRecorder recorder = _FakeRecorder(audioPath);
+    final _FakeTranscription transcription =
+        _FakeTranscription(<Object>['cap stopped me']);
+    final CaptureController controller = CaptureController(
+      recorder: recorder,
+      transcriptionService: transcription,
+      repository: repository,
+      maxDuration: const Duration(milliseconds: 50),
+    );
+
+    await controller.startRecording();
+    expect(controller.state, isA<CaptureRecording>());
+
+    // Wait past the cap; the timer fires _onCapReached, which calls
+    // stopRecording → transcribe → commit. The intermediate transcribing
+    // state is racy to observe, so just wait for terminal.
+    await _waitFor(() => controller.state is CaptureCommitted);
+
+    final CaptureCommitted committed = controller.state as CaptureCommitted;
+    expect(committed.autoStoppedByCap, isTrue,
+        reason: 'cap-triggered stop must flag the committed state');
+
+    // Normal user-initiated stops should leave the flag false.
+    transcription.outcomes.add('user stopped me');
+    controller.dismiss();
+    await controller.startRecording();
+    await controller.stopRecording();
+    final CaptureCommitted secondCommit = controller.state as CaptureCommitted;
+    expect(secondCommit.autoStoppedByCap, isFalse);
+  });
+}
+
+/// Polls [predicate] every 10 ms up to a 2 s budget. Used in lieu of an
+/// arbitrary `Future.delayed` so the test stays fast in the common case but
+/// still tolerates whatever scheduling jitter the host throws at it.
+Future<void> _waitFor(bool Function() predicate) async {
+  final stopwatch = Stopwatch()..start();
+  while (!predicate()) {
+    if (stopwatch.elapsedMilliseconds > 2000) {
+      throw StateError('timed out waiting for predicate');
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+  }
 }

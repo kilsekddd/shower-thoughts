@@ -24,6 +24,9 @@ extern "C" {
 //   -4  wav not 16kHz mono 16-bit PCM (out_buf receives a human-readable reason)
 //   -5  whisper_init_from_file_with_params failed
 //   -6  whisper_full failed
+//   -7  malformed WAV chunks (no fmt or data chunk)
+//   -8  transcript would not fit in out_buf (partial written for diagnostics —
+//       callers should retry with a larger buffer)
 int spike_transcribe_wav(const char* model_path,
                          const char* wav_path,
                          char* out_buf,

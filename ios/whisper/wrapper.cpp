@@ -84,6 +84,7 @@ extern "C" {
 //   -5  whisper_init_from_file_with_params failed
 //   -6  whisper_full failed
 //   -7  malformed WAV chunks (no fmt or data chunk)
+//   -8  transcript would not fit in out_buf (partial written for diagnostics)
 int spike_transcribe_wav(const char* model_path, const char* wav_path, char* out_buf, int buf_size) {
     FILE* f = std::fopen(wav_path, "rb");
     if (!f) return -1;
@@ -162,11 +163,19 @@ int spike_transcribe_wav(const char* model_path, const char* wav_path, char* out
     }
     whisper_free(ctx);
 
-    int len = (int)transcript.size();
-    if (len >= buf_size) len = buf_size - 1;
-    std::memcpy(out_buf, transcript.data(), len);
-    out_buf[len] = '\0';
-    return len;
+    const int full_len = (int)transcript.size();
+    if (full_len >= buf_size) {
+        // Write as much as fits so callers can show context in diagnostics,
+        // but signal -8 so they don't mistake the truncated text for a complete
+        // transcript. Caller is expected to retry with a larger buffer.
+        const int partial_len = buf_size - 1;
+        std::memcpy(out_buf, transcript.data(), partial_len);
+        out_buf[partial_len] = '\0';
+        return -8;
+    }
+    std::memcpy(out_buf, transcript.data(), full_len);
+    out_buf[full_len] = '\0';
+    return full_len;
 }
 
 } // extern "C"

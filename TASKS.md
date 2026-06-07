@@ -105,6 +105,16 @@ Shipped on top of v1.0.
 - [x] Update `test/export/json_exporter_test.dart`: assert `v2` tag, `completed_at` is present-and-null on active notes, ISO-stringified on completed notes, and that the export contains both active and completed rows.
 - [x] Document the v2 shape in `ARCHITECTURE.md`; add a "v1.1 additions" section to `PRD.md`.
 
+## Milestone 14: max recording duration + transcript truncation detection
+
+Closes the silent-data-loss timebomb where a stuck or pocket-pressed button could record indefinitely and silently truncate the transcript when whisper's output exceeded the FFI buffer.
+
+- [x] `ios/whisper/wrapper.cpp` returns the new `-8` ("transcript would not fit in out_buf") instead of silently truncating + returning a positive count. Partial transcript is written into `out_buf` for diagnostics. `ios/whisper/wrapper.h` documents the new code.
+- [x] `lib/transcription/whisper_ffi.dart` raises the default output buffer from 16 KiB to 64 KiB and retries once at 256 KiB on `-8` before throwing `WhisperException`.
+- [x] `lib/app/capture_controller.dart` enforces a 10-minute hard cap on a single recording via an injectable `maxDuration`. A `Timer` started on `CaptureRecording` transition auto-calls `stopRecording` on fire and pipes an `autoStoppedByCap` flag through to `CaptureTranscribing` / `CaptureCommitted` / `CaptureFailed`. Cancelled on stop, abort, and dispose.
+- [x] `lib/ui/pages/capture_page.dart` surfaces "Recording reached the 10-minute cap." in the transcribing and saved status panels when the flag is set, so the user understands their hold was cut short.
+- [x] `test/app/capture_controller_test.dart` covers the cap path with a 50 ms `maxDuration` injected via the ctor: confirms the cap-triggered commit carries `autoStoppedByCap: true` and a normal stop carries `false`.
+
 ## Out of scope (not scheduled)
 
 The PRD lists these explicitly out for v1; do not schedule work for them:
