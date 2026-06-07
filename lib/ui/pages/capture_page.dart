@@ -47,16 +47,17 @@ class CapturePage extends ConsumerWidget {
             child: Center(
               child: PushToTalkButton(
                 mode: mode,
-                enabled: state is CaptureIdle ||
-                    state is CaptureCommitted ||
-                    state is CaptureFailed,
+                // Stay interactive while recording so toggle mode can stop on
+                // a second tap and hold mode keeps its active-red visual.
+                // Only transcribing is a genuine no-gestures window.
+                enabled: state is! CaptureTranscribing,
                 onStart: controller.startRecording,
                 onStop: controller.stopRecording,
               ),
             ),
           ),
           const SizedBox(height: 16),
-          _StatusPanel(state: state, controller: controller),
+          _StatusPanel(state: state, controller: controller, mode: mode),
         ],
       ),
     );
@@ -70,38 +71,35 @@ const String _capReachedMessage =
     'Recording reached the 10-minute cap.';
 
 class _StatusPanel extends StatelessWidget {
-  const _StatusPanel({required this.state, required this.controller});
+  const _StatusPanel({
+    required this.state,
+    required this.controller,
+    required this.mode,
+  });
 
   final CaptureState state;
   final CaptureController controller;
+  final RecordGesture mode;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final bool isHold = mode == RecordGesture.hold;
     return switch (state) {
       CaptureIdle() => Text(
-          'Tap and hold the button to record a note.',
+          isHold
+              ? 'Tap and hold the button to record a note.'
+              : 'Tap the button to start recording.',
           style: theme.textTheme.bodyMedium,
           textAlign: TextAlign.center,
         ),
-      CaptureRecording() => Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(
-              'Recording — release to transcribe.',
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: theme.colorScheme.error),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            // Tap-up sometimes never fires (e.g. when iOS pops the mic
-            // permission modal mid-press and steals the gesture). The Stop
-            // button is the always-reachable escape hatch back to idle.
-            FilledButton.tonal(
-              onPressed: controller.stopRecording,
-              child: const Text('Stop'),
-            ),
-          ],
+      CaptureRecording() => Text(
+          isHold
+              ? 'Recording — release to transcribe.'
+              : 'Recording — tap the button again to stop.',
+          style: theme.textTheme.bodyMedium
+              ?.copyWith(color: theme.colorScheme.error),
+          textAlign: TextAlign.center,
         ),
       CaptureTranscribing(:final bool autoStoppedByCap) => Column(
           mainAxisSize: MainAxisSize.min,
