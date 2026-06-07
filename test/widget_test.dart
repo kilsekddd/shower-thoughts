@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shower_thoughts/app/app.dart';
 import 'package:shower_thoughts/app/providers.dart';
 import 'package:shower_thoughts/data/database.dart';
@@ -10,11 +11,14 @@ void main() {
   testWidgets('app boots to the capture tab', (WidgetTester tester) async {
     final AppDatabase db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: <Override>[
           databaseProvider.overrideWithValue(db),
+          sharedPreferencesProvider.overrideWithValue(prefs),
           // Skip the model-copy bootstrap so the splash doesn't gate the test.
           bootstrapProvider.overrideWith((Ref ref) => Future<void>.value()),
         ],

@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../audio/audio_recorder.dart';
 import '../data/database.dart';
 import '../data/notes_dao.dart';
 import '../data/notes_repository.dart';
+import '../data/settings_repository.dart';
 import '../export/json_exporter.dart';
 import '../transcription/model_assets.dart';
 import '../transcription/transcription_service.dart';
@@ -17,6 +19,42 @@ import 'notes_controller.dart';
 final Provider<AppDatabase> databaseProvider = Provider<AppDatabase>((Ref ref) {
   throw StateError('databaseProvider must be overridden in ProviderScope');
 });
+
+/// Overridden in `main.dart` after [SharedPreferences.getInstance] resolves so
+/// widgets and controllers can read settings synchronously. Throws if not
+/// overridden — same loud-crash contract as [databaseProvider].
+final Provider<SharedPreferences> sharedPreferencesProvider =
+    Provider<SharedPreferences>((Ref ref) {
+  throw StateError(
+    'sharedPreferencesProvider must be overridden in ProviderScope',
+  );
+});
+
+final Provider<SettingsRepository> settingsRepositoryProvider =
+    Provider<SettingsRepository>((Ref ref) {
+  return SettingsRepository(ref.watch(sharedPreferencesProvider));
+});
+
+/// The active record-mode gesture. Initial value loaded from
+/// [SettingsRepository]; updates are persisted through the same repo so the
+/// choice survives a relaunch.
+final StateNotifierProvider<RecordGestureNotifier, RecordGesture>
+    recordGestureProvider =
+    StateNotifierProvider<RecordGestureNotifier, RecordGesture>((Ref ref) {
+  return RecordGestureNotifier(ref.watch(settingsRepositoryProvider));
+});
+
+class RecordGestureNotifier extends StateNotifier<RecordGesture> {
+  RecordGestureNotifier(this._settings) : super(_settings.recordGesture);
+
+  final SettingsRepository _settings;
+
+  Future<void> set(RecordGesture v) async {
+    if (state == v) return;
+    state = v;
+    await _settings.setRecordGesture(v);
+  }
+}
 
 /// One-shot first-launch setup. Copies the bundled whisper model out of the
 /// asset bundle into the documents directory (~77 MB on first launch, instant

@@ -115,6 +115,38 @@ Closes the silent-data-loss timebomb where a stuck or pocket-pressed button coul
 - [x] `lib/ui/pages/capture_page.dart` surfaces "Recording reached the 10-minute cap." in the transcribing and saved status panels when the flag is set, so the user understands their hold was cut short.
 - [x] `test/app/capture_controller_test.dart` covers the cap path with a 50 ms `maxDuration` injected via the ctor: confirms the cap-triggered commit carries `autoStoppedByCap: true` and a normal stop carries `false`.
 
+## Milestone 15: record-mode toggle + settings repository
+
+A user asked for a tap-to-start / tap-to-stop mode for longer recordings.
+The 10-minute cap from M14 makes a stuck "started" state safe. Lands a
+small settings layer rather than a one-off bool so future settings can
+mirror the same shape.
+
+- [x] Add `shared_preferences` to `pubspec.yaml`.
+- [x] Add `lib/data/settings_repository.dart` exposing a typed `RecordGesture`
+      (hold | toggle) getter + setter over `SharedPreferences`, with defensive
+      parsing back to `hold` on unknown values. One private string key per
+      setting so future settings mirror the shape.
+- [x] Add `sharedPreferencesProvider` (override-required, like
+      `databaseProvider`), `settingsRepositoryProvider`, and
+      `recordGestureProvider` (`StateNotifier<RecordGesture>`) to
+      `lib/app/providers.dart`.
+- [x] `lib/main.dart` awaits `SharedPreferences.getInstance()` during bootstrap
+      and overrides `sharedPreferencesProvider`.
+- [x] `lib/ui/widgets/push_to_talk_button.dart` takes a `RecordGesture mode`
+      param. Hold mode keeps tap-down / tap-up / tap-cancel semantics; toggle
+      mode flips state on each tap. Default labels adapt to mode; label
+      overrides still work.
+- [x] `lib/ui/pages/capture_page.dart` adds a `SegmentedButton<RecordGesture>`
+      above the record button wired to `recordGestureProvider`, disabled while
+      the controller is recording or transcribing.
+- [x] `test/data/settings_repository_test.dart` covers default + round-trip via
+      `SharedPreferences.setMockInitialValues`.
+- [x] `test/widget_test.dart` primes `SharedPreferences.setMockInitialValues({})`
+      so the app boot works.
+- [x] `test/ui/widgets/push_to_talk_button_test.dart` confirms toggle mode
+      fires `onStart` on tap 1 and `onStop` on tap 2.
+
 ## Out of scope (not scheduled)
 
 The PRD lists these explicitly out for v1; do not schedule work for them:

@@ -32,6 +32,9 @@ dependencies:
   # iOS-style swipe-to-reveal actions on list tiles.
   flutter_slidable: ^4.0.0
 
+  # Key/value store for user-tunable settings (record-mode toggle, etc.).
+  shared_preferences: ^2.3.0
+
 dependency_overrides:
   # record 5.2.1 pulls record_platform_interface 1.6.0, but its sibling
   # record_linux 0.7.2 still implements the older `hasPermission(recorderId)`
