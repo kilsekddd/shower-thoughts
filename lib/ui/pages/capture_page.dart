@@ -21,43 +21,60 @@ class CapturePage extends ConsumerWidget {
     final bool modePickerEnabled =
         state is! CaptureRecording && state is! CaptureTranscribing;
 
+    // Equal Expanded slices above and below the fixed-size PTT button keep
+    // the button at vertical screen-center regardless of how the status
+    // text wraps under bumped dynamic type. The SegmentedButton hugs the top
+    // of its slice and the status panel hugs the top of its slice (just
+    // under the button) so growth in either area extends away from, not
+    // into, the centered button.
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          SegmentedButton<RecordGesture>(
-            segments: const <ButtonSegment<RecordGesture>>[
-              ButtonSegment<RecordGesture>(
-                value: RecordGesture.hold,
-                label: Text('Hold'),
-              ),
-              ButtonSegment<RecordGesture>(
-                value: RecordGesture.toggle,
-                label: Text('Toggle'),
-              ),
-            ],
-            selected: <RecordGesture>{mode},
-            onSelectionChanged: modePickerEnabled
-                ? (Set<RecordGesture> s) =>
-                    ref.read(recordGestureProvider.notifier).set(s.first)
-                : null,
-          ),
           Expanded(
-            child: Center(
-              child: PushToTalkButton(
-                mode: mode,
-                // Stay interactive while recording so toggle mode can stop on
-                // a second tap and hold mode keeps its active-red visual.
-                // Only transcribing is a genuine no-gestures window.
-                enabled: state is! CaptureTranscribing,
-                onStart: controller.startRecording,
-                onStop: controller.stopRecording,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: SegmentedButton<RecordGesture>(
+                segments: const <ButtonSegment<RecordGesture>>[
+                  ButtonSegment<RecordGesture>(
+                    value: RecordGesture.hold,
+                    label: Text('Hold'),
+                  ),
+                  ButtonSegment<RecordGesture>(
+                    value: RecordGesture.toggle,
+                    label: Text('Toggle'),
+                  ),
+                ],
+                selected: <RecordGesture>{mode},
+                onSelectionChanged: modePickerEnabled
+                    ? (Set<RecordGesture> s) =>
+                        ref.read(recordGestureProvider.notifier).set(s.first)
+                    : null,
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          _StatusPanel(state: state, controller: controller, mode: mode),
+          PushToTalkButton(
+            mode: mode,
+            // Stay interactive while recording so toggle mode can stop on
+            // a second tap and hold mode keeps its active-red visual.
+            // Only transcribing is a genuine no-gestures window.
+            enabled: state is! CaptureTranscribing,
+            onStart: controller.startRecording,
+            onStop: controller.stopRecording,
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: _StatusPanel(
+                  state: state,
+                  controller: controller,
+                  mode: mode,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
