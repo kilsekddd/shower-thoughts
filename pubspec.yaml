@@ -1,7 +1,7 @@
 name: shower_thoughts
 description: "Push-to-talk voice notes, transcribed on-device, fully offline."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ^3.12.0
