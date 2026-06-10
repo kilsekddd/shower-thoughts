@@ -64,4 +64,10 @@ Shipped on top of v1.0 once the App Store version was live. The capture flow, on
 
 **4. Export schema v2.** Each note row gains a `"completed_at"` field (ISO-8601 UTC string or `null`); the rest of the v1 shape is byte-for-byte preserved. Schema tag bumps to `shower-thoughts.export.v2`. The export still contains every note regardless of completion state.
 
+**5. Bounded recording + silent-truncation guard.** A single recording is hard-capped at 10 minutes; the cap fires whether the user holds the button forever, walks away with it stuck down, or simply forgets a toggle-mode session running. The native whisper.cpp wrapper now returns a distinct error code when its output buffer can't hold the full transcript (previously it silently truncated mid-sentence); the FFI layer grows the buffer and retries once before surfacing the failure.
+
+**6. Toggle record mode.** Users can switch the capture button between push-to-talk (hold) and toggle (tap-to-start, tap-to-stop) via a segmented control on the capture screen. The 10-minute cap is what makes the toggle option safe — without it, a forgotten session would record indefinitely. The mode preference persists across launches in a small extensible `SettingsRepository` (the first of what may be several settings).
+
+**7. Recording cues.** A short rising tone + medium-impact haptic fire at recording start, and a short falling tone + light-impact haptic at recording end. Audible to people in the area (so they know they're being captured) and eyes-off confirmation for the user. Cues fire outside the recorder window so they don't bleed into the WAV. Both gesture modes use the same cues, including the cap-triggered auto-stop path.
+
 The non-goals from v1.0 still hold: no soft-delete or trash, no cloud sync, no AI summarization, no user-defined categories, no audio retention.

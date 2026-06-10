@@ -3,7 +3,7 @@
 Push-to-talk voice notes, transcribed on-device, fully offline. Flutter iOS
 app; iPad / Android / desktop are deliberately later.
 
-- **Status:** v1.0.0 live on the App Store as of 2026-06-06.
+- **Status:** v1.0.0 live on the App Store as of 2026-06-06. v1.1.0+2 built and queued for TestFlight upload.
 - **Privacy policy:** https://kilsekddd.github.io/shower-thoughts/
 - **Issues / contact:** https://github.com/kilsekddd/shower-thoughts/issues
 - **Bundle ID:** `io.github.kilsekddd.showerThoughts`

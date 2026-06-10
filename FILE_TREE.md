@@ -8,8 +8,13 @@ shower-thoughts/
 ├── ARCHITECTURE.md
 ├── TASKS.md
 ├── assets/
-│   └── models/
-│       └── ggml-tiny.en.bin
+│   ├── models/
+│   │   └── ggml-tiny.en.bin
+│   └── sounds/
+│       ├── start.wav
+│       └── stop.wav
+├── tool/
+│   └── generate_cues.dart
 ├── lib/
 │   ├── main.dart
 │   ├── app/
@@ -17,7 +22,8 @@ shower-thoughts/
 │   │   ├── router.dart
 │   │   ├── capture_controller.dart
 │   │   ├── notes_controller.dart
-│   │   └── export_controller.dart
+│   │   ├── export_controller.dart
+│   │   └── providers.dart
 │   ├── ui/
 │   │   ├── theme.dart
 │   │   ├── layout/
@@ -35,10 +41,13 @@ shower-thoughts/
 │   │   ├── database.dart
 │   │   ├── database.g.dart
 │   │   ├── notes_dao.dart
-│   │   └── notes_repository.dart
+│   │   ├── notes_repository.dart
+│   │   └── settings_repository.dart
 │   ├── audio/
 │   │   ├── audio_recorder.dart
-│   │   └── audio_paths.dart
+│   │   ├── audio_paths.dart
+│   │   ├── cue_player.dart
+│   │   └── haptic_adapter.dart
 │   ├── transcription/
 │   │   ├── transcription_service.dart
 │   │   ├── whisper_ffi.dart
@@ -69,6 +78,8 @@ shower-thoughts/
 - `analysis_options.yaml` — lints. Enable `flutter_lints` plus strict-mode flags so the analyzer matches the "no overengineering" posture.
 - `CLAUDE.md`, `PRD.md`, `ARCHITECTURE.md`, `TASKS.md` — the four decomposition artifacts; AI assistants read CLAUDE.md first.
 - `assets/models/ggml-tiny.en.bin` — bundled whisper model. Shipped as a Flutter asset and copied to the app's documents directory on first launch.
+- `assets/sounds/start.wav` / `assets/sounds/stop.wav` — short rising / falling sine-sweep cues (~6.6 KB each, 22050 Hz mono 16-bit PCM) played at recording start and end. Synthesised, not recorded.
+- `tool/generate_cues.dart` — standalone Dart script that synthesises the two cue WAVs. Kept in-repo so the cues can be re-shaped (frequency, length, envelope) without an external audio tool.
 - `lib/main.dart` — Flutter entrypoint. Initializes the database, copies the bundled model on first launch, wires Riverpod, and runs the app.
 - `lib/app/app.dart` — top-level `MaterialApp` with theme and router.
 - `lib/app/router.dart` — route table for the four pages.
@@ -88,8 +99,11 @@ shower-thoughts/
 - `lib/data/database.g.dart` — generated Drift code; do not hand-edit.
 - `lib/data/notes_dao.dart` — typed queries for inserts, searches, and bulk reads.
 - `lib/data/notes_repository.dart` — the contract layer; owns `commitTranscript(note, audioPath)` which inserts the row and deletes the audio file in the same operation.
+- `lib/data/settings_repository.dart` — thin typed wrapper over `shared_preferences`. First setting is `RecordGesture` (hold / toggle); shape is one private key per setting so future settings mirror it.
 - `lib/audio/audio_recorder.dart` — wraps the `record` package, configured for 16 kHz mono PCM WAV.
 - `lib/audio/audio_paths.dart` — single source of truth for the deterministic tmp recording path.
+- `lib/audio/cue_player.dart` — pre-loads the start / stop cue WAVs and exposes fire-and-forget `playStart()` / `playStop()` via `audioplayers`.
+- `lib/audio/haptic_adapter.dart` — abstraction over `flutter/services` `HapticFeedback` (`startCue` = medium impact, `stopCue` = light impact) so the controller can be tested without real haptics.
 - `lib/transcription/transcription_service.dart` — runs whisper inference on a background isolate; consumes an audio path, returns transcript text.
 - `lib/transcription/whisper_ffi.dart` — Dart FFI wrapper over whisper.cpp.
 - `lib/transcription/whisper_bindings.dart` — generated FFI bindings (via `ffigen`).
